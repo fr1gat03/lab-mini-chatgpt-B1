@@ -1,35 +1,30 @@
-﻿using Lib.Corpus;
-using Lib.Corpus.Infrastructure;
+﻿using NUnit.Framework;
+using Lib.Corpus;
 using Lib.Tokenization.Application;
 using MiniChatGPT.Contracts;
-using NUnit.Framework;
+using Integration.DataPipeline.Mocks; 
 
-namespace Integration.DataPipeline;
+namespace Integration.DataPipeline.Tests; 
 
 [TestFixture]
 public class WordEdgeCasesTests
 {
-    private class EdgeCaseFileSystem : IFileSystem
-    {
-        public bool Exists(string path) => true;
-        public string ReadAllText(string path) => FileContent;
-        public string FileContent { get; set; } = string.Empty;
-    }
-
     [Test]
     public void WordTokenizer_WithEmptyAndSingleWord_HandlesGracefully()
     {
-        var fakeFs = new EdgeCaseFileSystem();
-        var loader = new CorpusLoader(fakeFs);
+        var mockFs = new MockFileSystem();
+        var loader = new CorpusLoader(mockFs);
+        var factory = new WordTokenizerFactory();
 
-        fakeFs.FileContent = "";
+        mockFs.AddFile("empty.txt", "");
         var emptyCorpus = loader.Load("empty.txt");
-        ITokenizer emptyTokenizer = WordTokenizer.BuildFromText(emptyCorpus.TrainText);
+        ITokenizer emptyTokenizer = factory.BuildFromText(emptyCorpus.TrainText); 
+        
         Assert.That(emptyTokenizer.VocabSize, Is.EqualTo(1));
 
-        fakeFs.FileContent = "Привіт";
+        mockFs.AddFile("single.txt", "Привіт");
         var singleCorpus = loader.Load("single.txt");
-        ITokenizer singleTokenizer = WordTokenizer.BuildFromText(singleCorpus.TrainText);
+        ITokenizer singleTokenizer = factory.BuildFromText(singleCorpus.TrainText);
         
         var encoded = singleTokenizer.Encode("Привіт");
         Assert.That(singleTokenizer.Decode(encoded), Is.EqualTo("привіт"));
