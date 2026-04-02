@@ -31,13 +31,24 @@ namespace Lib.Tokenization.Application
 
         public int[] Encode(string text)
         {
-            if (string.IsNullOrEmpty(text)) return Array.Empty<int>();
+            if (string.IsNullOrEmpty(text))
+            {
+                return Array.Empty<int>();
+            }
 
             int[] tokens = new int[text.Length];
             for (int i = 0; i < text.Length; i++)
             {
-                tokens[i] = _vocabulary.GetId(text[i]); 
+                int tokenId = _vocabulary.GetId(text[i]);
+
+                if (tokenId < 0)
+                {
+                    throw new InvalidDataException($"Критична помилка: згенеровано невалідний токен з ID = {tokenId}.");
+                } 
+            
+                tokens[i] = tokenId; 
             }
+            
             return tokens;
         }
 

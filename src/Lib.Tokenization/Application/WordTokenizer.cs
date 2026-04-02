@@ -55,12 +55,18 @@ namespace Lib.Tokenization.Application
                 string normalized = NormalizeWord(rawWord);
                 if (string.IsNullOrEmpty(normalized)) continue;
 
-                tempTokens[validCount] = _vocabulary.GetId(normalized);
+                int tokenId = _vocabulary.GetId(normalized);
+        
+                if (tokenId < 0) 
+                    throw new InvalidDataException($"Критична помилка: згенеровано невалідний токен з ID = {tokenId}.");
+
+                tempTokens[validCount] = tokenId;
                 validCount++;
             }
 
             int[] result = new int[validCount];
             Array.Copy(tempTokens, result, validCount);
+    
             return result;
         }
 
